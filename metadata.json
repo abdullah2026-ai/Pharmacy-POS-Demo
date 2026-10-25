@@ -1,0 +1,6 @@
+{
+  "name": "Pharmly BD - Neumorphic Pharmacy Management & Inventory",
+  "description": "Enterprise pharmacy management system with offline-first cross-device sync, real-time analytics, Bangladesh medicine registry, patient EMR history, RBAC, and comprehensive security audit logging.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

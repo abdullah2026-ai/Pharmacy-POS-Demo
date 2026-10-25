@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: #eef2f6;
+    color: #1e293b;
+  }
+  
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Custom Neumorphic Design System */
+.neu-flat {
+  background: #eef2f6;
+  box-shadow: 6px 6px 14px #cad3df, -6px -6px 14px #ffffff;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.neu-flat-sm {
+  background: #eef2f6;
+  box-shadow: 3px 3px 8px #cad3df, -3px -3px 8px #ffffff;
+  border-radius: 0.75rem;
+}
+
+.neu-convex {
+  background: linear-gradient(145deg, #f8fbff, #e3e8ee);
+  box-shadow: 6px 6px 14px #cad3df, -6px -6px 14px #ffffff;
+  border-radius: 1.25rem;
+}
+
+.neu-sunken {
+  background: #e9eef4;
+  box-shadow: inset 3px 3px 7px #c7d1dc, inset -3px -3px 7px #ffffff;
+  border-radius: 1rem;
+}
+
+.neu-sunken-sm {
+  background: #e9eef4;
+  box-shadow: inset 2px 2px 5px #c7d1dc, inset -2px -2px 5px #ffffff;
+}
+
+.neu-btn {
+  background: #eef2f6;
+  box-shadow: 4px 4px 9px #cbd4e0, -4px -4px 9px #ffffff;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.neu-btn:hover {
+  box-shadow: 5px 5px 12px #c2ccd8, -5px -5px 12px #ffffff;
+  transform: translateY(-1px);
+}
+
+.neu-btn:active, .neu-btn-active {
+  box-shadow: inset 3px 3px 6px #cbd4e0, inset -3px -3px 6px #ffffff !important;
+  transform: translateY(1px);
+}
+
+/* Dark teal neumorphism (Pharmly Signature Sidebar & Highlights) */
+.neu-dark-panel {
+  background: #062822;
+  box-shadow: 10px 10px 24px rgba(0, 0, 0, 0.25), -6px -6px 18px rgba(16, 74, 64, 0.3);
+}
+
+.neu-dark-item {
+  background: #062822;
+  box-shadow: 3px 3px 7px #031713, -3px -3px 7px #0a3d34;
+}
+
+.neu-dark-sunken {
+  background: #05201b;
+  box-shadow: inset 2px 2px 5px #020d0b, inset -2px -2px 5px #0c3e34;
+}
+
+.neu-accent-btn {
+  background: #bbf246;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.15), -3px -3px 8px rgba(255, 255, 255, 0.6);
+  color: #062822;
+  font-weight: 600;
+}
+
+.neu-accent-btn:hover {
+  background: #a9e430;
+  box-shadow: 5px 5px 14px rgba(0, 0, 0, 0.2);
+}
+
+.neu-accent-btn:active {
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.3), inset -2px -2px 5px rgba(255, 255, 255, 0.5);
+}
+
+/* Diagonal stripe pattern for highlighted analytics bars */
+.bg-striped-pattern {
+  background-image: repeating-linear-gradient(
+    45deg,
+    #bbf246,
+    #bbf246 6px,
+    #062822 6px,
+    #062822 12px
+  );
+}
+
+/* Print Invoice Styling */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}
