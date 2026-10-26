@@ -12,7 +12,9 @@ import {
   User as UserIcon,
   Shield,
   Layers,
-  MessageSquare
+  MessageSquare,
+  Sparkles,
+  ExternalLink
 } from 'lucide-react';
 import { User, UserRole, Medicine } from '../types/pharmacy';
 import { ActiveTab } from './Sidebar';
@@ -31,6 +33,7 @@ interface TopBarProps {
   onSearchSelect?: (type: 'medicine' | 'patient', id: string) => void;
   onNavigateToLanding?: () => void;
   onOpenWhatsAppDelivery?: () => void;
+  onOpenGeminiAssistant?: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -45,7 +48,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   onLogout,
   medicines,
   onNavigateToLanding,
-  onOpenWhatsAppDelivery
+  onOpenWhatsAppDelivery,
+  onOpenGeminiAssistant
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotificationMenu, setShowNotificationMenu] = useState(false);
@@ -118,53 +122,50 @@ export const TopBar: React.FC<TopBarProps> = ({
           </div>
         </div>
 
-        {/* Right: Sync Status, Landing Link, Notifications & Staff Profile */}
-        <div className="flex items-center gap-2.5 lg:gap-3.5">
-          {/* Landing Page Link */}
+        {/* Right Actions: Keep necessary only (Clean, Uncrowded) */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* AI Clinical Assistant Icon (Gemini 3.8 Flash) */}
+          {onOpenGeminiAssistant && (
+            <button
+              onClick={onOpenGeminiAssistant}
+              title="Pharmly AI Clinical Assistant (Gemini 3.8 Flash)"
+              className="neu-btn p-2 rounded-xl text-emerald-700 hover:text-emerald-900 transition-colors"
+              aria-label="AI Assistant"
+            >
+              <Sparkles className="w-4 h-4 fill-current text-emerald-600" />
+            </button>
+          )}
+
+          {/* View Storefront Icon */}
           {onNavigateToLanding && (
             <button
               onClick={onNavigateToLanding}
-              className="hidden md:flex neu-btn px-2.5 py-1.5 rounded-xl items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 transition-colors"
+              title="Open Public Storefront & Delivery Page"
+              className="neu-btn p-2 rounded-xl text-slate-600 hover:text-slate-900 transition-colors"
+              aria-label="View Storefront"
             >
-              <span>Landing Page</span>
+              <ExternalLink className="w-4 h-4" />
             </button>
           )}
 
-          {/* Gazipur WhatsApp Delivery Button */}
-          {onOpenWhatsAppDelivery && (
-            <button
-              onClick={onOpenWhatsAppDelivery}
-              title="হোয়াটসঅ্যাপে গাজীপুর হোম ডেলিভারি অর্ডার (WhatsApp Gazipur Delivery)"
-              className="neu-btn px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-bold text-slate-800 hover:text-emerald-700 transition-colors"
-            >
-              <MessageSquare className="w-3.5 h-3.5 text-[#25D366] fill-current" />
-              <span className="hidden xl:inline text-emerald-800 font-extrabold">গাজীপুর ডেলিভারি</span>
-            </button>
-          )}
-
-          {/* Multi-Device Offline Sync Pill */}
-          <div className="hidden sm:flex items-center gap-2">
-            <button
-              onClick={onTriggerSync}
-              disabled={isSyncing}
-              title={isOnline ? 'Cloud Synced - Click to force synchronize across devices' : 'Offline Mode - Changes queued locally'}
-              className={`neu-btn px-2.5 py-1.5 rounded-xl flex items-center gap-2 text-xs font-semibold ${
-                isOnline ? 'text-emerald-700' : 'text-amber-700'
-              }`}
-            >
-              {isOnline ? (
-                <Wifi className="w-3.5 h-3.5 text-emerald-600" />
-              ) : (
-                <WifiOff className="w-3.5 h-3.5 text-amber-600" />
-              )}
-              
-              <span className="hidden xl:inline">
-                {isOnline ? (pendingSyncCount > 0 ? `${pendingSyncCount} queued` : 'Synced') : 'Offline'}
-              </span>
-
-              <RefreshCw className={`w-3.5 h-3.5 text-slate-400 ${isSyncing ? 'animate-spin text-emerald-600' : ''}`} />
-            </button>
-          </div>
+          {/* Multi-Device Offline Sync Icon */}
+          <button
+            onClick={onTriggerSync}
+            disabled={isSyncing}
+            title={isOnline ? (pendingSyncCount > 0 ? `${pendingSyncCount} changes queued to sync` : 'Cloud Synced') : 'Offline Mode'}
+            className={`neu-btn p-2 rounded-xl transition-colors ${
+              isOnline ? 'text-emerald-700' : 'text-amber-700'
+            }`}
+            aria-label="Sync Status"
+          >
+            {isSyncing ? (
+              <RefreshCw className="w-4 h-4 animate-spin text-emerald-600" />
+            ) : isOnline ? (
+              <Wifi className="w-4 h-4 text-emerald-600" />
+            ) : (
+              <WifiOff className="w-4 h-4 text-amber-600" />
+            )}
+          </button>
 
           {/* Notifications Bell */}
           <div className="relative">
@@ -231,15 +232,15 @@ export const TopBar: React.FC<TopBarProps> = ({
                 referrerPolicy="no-referrer"
                 className="w-8 h-8 rounded-full object-cover ring-2 ring-emerald-500/40"
               />
-              <div className="hidden sm:block text-left pr-1">
-                <p className="text-xs font-bold text-slate-800 leading-none truncate max-w-[110px]">
-                  {currentUser.name}
+              <div className="hidden md:block text-left pr-1">
+                <p className="text-xs font-bold text-slate-800 leading-tight truncate max-w-[100px]">
+                  {currentUser.name.split(' ')[0]}
                 </p>
-                <p className="text-[10px] text-slate-500 font-medium truncate max-w-[110px]">
-                  @{currentUser.email.split('@')[0]}
+                <p className="text-[9px] text-emerald-700 font-bold uppercase leading-none">
+                  {currentUser.role}
                 </p>
               </div>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
             </button>
 
             {/* Profile Dropdown & Instant Role Switcher */}

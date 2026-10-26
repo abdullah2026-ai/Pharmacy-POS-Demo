@@ -22,6 +22,7 @@ import { InvoiceModal } from './components/InvoiceModal';
 import { LoginModal } from './components/LoginModal';
 import { LandingPage } from './components/LandingPage';
 import { WhatsAppDeliveryModal } from './components/WhatsAppDeliveryModal';
+import { GeminiChatbot } from './components/GeminiChatbot';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User>(storageService.getCurrentUser());
@@ -29,6 +30,7 @@ export default function App() {
   const [currentScreen, setCurrentScreen] = useState<'app' | 'landing'>('landing');
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
+  const [showGeminiChatbot, setShowGeminiChatbot] = useState<boolean>(false);
 
   // Core Data State
   const [medicines, setMedicines] = useState<Medicine[]>([]);
@@ -156,6 +158,7 @@ export default function App() {
             setCurrentScreen('app');
             setShowLoginModal(true);
           }}
+          onOrderCreatedInDb={() => reloadData()}
         />
 
         <LoginModal
@@ -195,6 +198,7 @@ export default function App() {
           medicines={medicines}
           onNavigateToLanding={() => setCurrentScreen('landing')}
           onOpenWhatsAppDelivery={() => setShowWhatsAppModal(true)}
+          onOpenGeminiAssistant={() => setShowGeminiChatbot(true)}
         />
 
         {/* View Routing */}
@@ -303,6 +307,13 @@ export default function App() {
       <WhatsAppDeliveryModal
         isOpen={showWhatsAppModal}
         onClose={() => setShowWhatsAppModal(false)}
+        onOrderCreatedInDb={() => reloadData()}
+      />
+
+      {/* Gemini AI Clinical Pharmacy Assistant */}
+      <GeminiChatbot
+        isOpen={showGeminiChatbot}
+        onClose={() => setShowGeminiChatbot(false)}
       />
     </div>
   );
