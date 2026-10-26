@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { User, UserRole, Medicine } from '../types/pharmacy';
 import { ActiveTab } from './Sidebar';
+import { getSafeAvatarUrl, SVG_AVATAR_FALLBACK } from '../utils/imageAssets';
 
 interface TopBarProps {
   activeTab: ActiveTab;
@@ -227,9 +228,13 @@ export const TopBar: React.FC<TopBarProps> = ({
               className="neu-btn px-2.5 py-1.5 rounded-2xl flex items-center gap-2.5 text-left transition-all"
             >
               <img
-                src={currentUser.avatarUrl || '/src/assets/images/superadmin_avatar_1792908539605.jpg'}
+                src={getSafeAvatarUrl(currentUser.avatarUrl)}
                 alt={currentUser.name}
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = SVG_AVATAR_FALLBACK;
+                }}
                 className="w-8 h-8 rounded-full object-cover ring-2 ring-emerald-500/40"
               />
               <div className="hidden md:block text-left pr-1">
@@ -249,9 +254,13 @@ export const TopBar: React.FC<TopBarProps> = ({
                 <div className="pb-3 border-b border-slate-200">
                   <div className="flex items-center gap-2.5">
                     <img
-                      src={currentUser.avatarUrl || '/src/assets/images/superadmin_avatar_1792908539605.jpg'}
+                      src={getSafeAvatarUrl(currentUser.avatarUrl)}
                       alt={currentUser.name}
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = SVG_AVATAR_FALLBACK;
+                      }}
                       className="w-10 h-10 rounded-full object-cover ring-2 ring-emerald-500/50"
                     />
                     <div>

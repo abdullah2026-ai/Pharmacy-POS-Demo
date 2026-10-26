@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
@@ -14,44 +14,50 @@ export const ThreeLogo: React.FC<ThreeLogoProps> = ({
   interactive = true
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
+  const [hasGlError, setHasGlError] = useState<boolean>(false);
 
   useEffect(() => {
     const container = mountRef.current;
     if (!container) return;
 
-    // Detect software WebGL
-    const isSoftwareGl = (() => {
-      try {
-        const gl = document.createElement('canvas').getContext('webgl2');
-        if (!gl) return true;
-        const ext = gl.getExtension('WEBGL_debug_renderer_info');
-        const param = ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER;
-        const gpu = String(gl.getParameter(param));
-        gl.getExtension('WEBGL_lose_context')?.loseContext();
-        return /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(gpu);
-      } catch {
-        return true;
-      }
-    })();
+    let renderer: THREE.WebGLRenderer | null = null;
+    let animationFrameId = 0;
+    let handlePointerMove: ((e: MouseEvent) => void) | null = null;
 
-    // Scene & Camera
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
-    camera.position.set(0, 0, 5.2);
+    try {
+      // Detect software WebGL
+      const isSoftwareGl = (() => {
+        try {
+          const gl = document.createElement('canvas').getContext('webgl2');
+          if (!gl) return true;
+          const ext = gl.getExtension('WEBGL_debug_renderer_info');
+          const param = ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER;
+          const gpu = String(gl.getParameter(param));
+          gl.getExtension('WEBGL_lose_context')?.loseContext();
+          return /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(gpu);
+        } catch {
+          return true;
+        }
+      })();
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({
-      alpha: true,
-      antialias: !isSoftwareGl,
-      powerPreference: 'high-performance'
-    });
-    renderer.setSize(size, size);
-    renderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, 2));
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+      // Scene & Camera
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+      camera.position.set(0, 0, 5.2);
 
-    container.appendChild(renderer.domElement);
+      // Renderer
+      renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: !isSoftwareGl,
+        powerPreference: 'high-performance'
+      });
+      renderer.setSize(size, size);
+      renderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, 2));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
+
+      container.appendChild(renderer.domElement);
 
     // Studio Environment
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
@@ -191,80 +197,152 @@ export const ThreeLogo: React.FC<ThreeLogoProps> = ({
     let targetRotX = 0;
     let targetRotY = 0;
 
-    const handlePointerMove = (e: MouseEvent) => {
-      if (!interactive) return;
-      const rect = container.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-      mouseX = x;
-      mouseY = y;
-    };
+      handlePointerMove = (e: MouseEvent) => {
+        if (!interactive) return;
+        const rect = container.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+        mouseX = x;
+        mouseY = y;
+      };
 
-    if (interactive) {
-      window.addEventListener('mousemove', handlePointerMove);
-    }
-
-    // Animation Loop
-    let animationFrameId = 0;
-    let clock = new THREE.Clock();
-
-    const animate = () => {
-      const elapsed = clock.getElapsedTime();
-
-      // Continuous gentle rotation
-      capsuleGroup.rotation.y = elapsed * 0.7;
-      orbit1Mesh.rotation.z = elapsed * 0.45;
-      orbit2Mesh.rotation.x = elapsed * -0.35;
-
-      // Position satellite on orbit
-      satelliteMesh.position.x = Math.cos(elapsed * 1.5) * 1.65;
-      satelliteMesh.position.z = Math.sin(elapsed * 1.5) * 1.65;
-      satelliteMesh.position.y = Math.sin(elapsed * 2.0) * 0.4;
-
-      // Smooth pointer parallax damping
-      targetRotY = mouseX * 0.6;
-      targetRotX = -mouseY * 0.4;
-      logoGroup.rotation.y += (targetRotY - logoGroup.rotation.y) * 0.08;
-      logoGroup.rotation.x += (targetRotX - logoGroup.rotation.x) * 0.08;
-
-      // Subtle breathing floating motion
-      logoGroup.position.y = Math.sin(elapsed * 1.8) * 0.08;
-
-      renderer.render(scene, camera);
-      animationFrameId = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
       if (interactive) {
-        window.removeEventListener('mousemove', handlePointerMove);
+        window.addEventListener('mousemove', handlePointerMove);
       }
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
-      }
-      // Cleanup geometries & materials
-      capTopGeo.dispose();
-      bodyTopGeo.dispose();
-      capBottomGeo.dispose();
-      bodyBottomGeo.dispose();
-      centerRingGeo.dispose();
-      crossHGeo.dispose();
-      crossVGeo.dispose();
-      orbit1Geo.dispose();
-      orbit2Geo.dispose();
-      satelliteGeo.dispose();
-      shadowGeo.dispose();
 
-      tealMaterial.dispose();
-      limeMaterial.dispose();
-      ringMaterial.dispose();
-      orbitMaterial.dispose();
-      shadowMat.dispose();
-      renderer.dispose();
-    };
+      // Animation Loop
+      const clock = new THREE.Clock();
+
+      const animate = () => {
+        const elapsed = clock.getElapsedTime();
+
+        // Continuous gentle rotation
+        capsuleGroup.rotation.y = elapsed * 0.7;
+        orbit1Mesh.rotation.z = elapsed * 0.45;
+        orbit2Mesh.rotation.x = elapsed * -0.35;
+
+        // Position satellite on orbit
+        satelliteMesh.position.x = Math.cos(elapsed * 1.5) * 1.65;
+        satelliteMesh.position.z = Math.sin(elapsed * 1.5) * 1.65;
+        satelliteMesh.position.y = Math.sin(elapsed * 2.0) * 0.4;
+
+        // Smooth pointer parallax damping
+        targetRotY = mouseX * 0.6;
+        targetRotX = -mouseY * 0.4;
+        logoGroup.rotation.y += (targetRotY - logoGroup.rotation.y) * 0.08;
+        logoGroup.rotation.x += (targetRotX - logoGroup.rotation.x) * 0.08;
+
+        // Subtle breathing floating motion
+        logoGroup.position.y = Math.sin(elapsed * 1.8) * 0.08;
+
+        if (renderer) {
+          renderer.render(scene, camera);
+        }
+        animationFrameId = requestAnimationFrame(animate);
+      };
+
+      animate();
+
+      return () => {
+        cancelAnimationFrame(animationFrameId);
+        if (interactive && handlePointerMove) {
+          window.removeEventListener('mousemove', handlePointerMove);
+        }
+        if (renderer && container.contains(renderer.domElement)) {
+          container.removeChild(renderer.domElement);
+        }
+        // Cleanup geometries & materials
+        capTopGeo.dispose();
+        bodyTopGeo.dispose();
+        capBottomGeo.dispose();
+        bodyBottomGeo.dispose();
+        centerRingGeo.dispose();
+        crossHGeo.dispose();
+        crossVGeo.dispose();
+        orbit1Geo.dispose();
+        orbit2Geo.dispose();
+        satelliteGeo.dispose();
+        shadowGeo.dispose();
+
+        tealMaterial.dispose();
+        limeMaterial.dispose();
+        ringMaterial.dispose();
+        orbitMaterial.dispose();
+        shadowMat.dispose();
+        if (renderer) {
+          renderer.dispose();
+        }
+      };
+    } catch (err) {
+      console.warn('WebGL initialization failed, falling back to vector 3D emblem:', err);
+      setHasGlError(true);
+      return () => {
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        if (handlePointerMove) window.removeEventListener('mousemove', handlePointerMove);
+      };
+    }
   }, [size, interactive]);
+
+  if (hasGlError) {
+    return (
+      <div
+        style={{ width: size, height: size }}
+        className={`relative select-none flex items-center justify-center ${className}`}
+      >
+        <svg
+          viewBox="0 0 200 200"
+          width={size}
+          height={size}
+          className="w-full h-full drop-shadow-xl"
+        >
+          <defs>
+            <linearGradient id="svgTealCap" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#0a3d34"/>
+              <stop offset="60%" stop-color="#062822"/>
+              <stop offset="100%" stop-color="#021411"/>
+            </linearGradient>
+            <linearGradient id="svgLimeCap" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#d4ff70"/>
+              <stop offset="60%" stop-color="#bbf246"/>
+              <stop offset="100%" stop-color="#9ad820"/>
+            </linearGradient>
+            <linearGradient id="silverRing" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="50%" stop-color="#cbd5e1"/>
+              <stop offset="100%" stop-color="#94a3b8"/>
+            </linearGradient>
+            <radialGradient id="orbitGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#bbf246" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#bbf246" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+
+          {/* Ambient Glow */}
+          <circle cx="100" cy="100" r="90" fill="url(#orbitGlow)"/>
+
+          {/* Orbit Rings */}
+          <ellipse cx="100" cy="100" rx="85" ry="34" fill="none" stroke="#bbf246" stroke-width="2" stroke-dasharray="6 4" opacity="0.6" transform="rotate(-25 100 100)"/>
+          <ellipse cx="100" cy="100" rx="88" ry="28" fill="none" stroke="#bbf246" stroke-width="1.5" opacity="0.4" transform="rotate(35 100 100)"/>
+          <circle cx="165" cy="72" r="5" fill="#ffffff" filter="drop-shadow(0 0 4px #bbf246)"/>
+
+          {/* Pill Capsule (tilted 35 deg) */}
+          <g transform="translate(100 100) rotate(35) translate(-100 -100)">
+            {/* Top Teal Half */}
+            <path d="M72 100 L72 65 C72 40 128 40 128 65 L128 100 Z" fill="url(#svgTealCap)"/>
+            {/* Medical Cross */}
+            <rect x="94" y="58" width="12" height="28" rx="2" fill="#ffffff" opacity="0.9"/>
+            <rect x="86" y="66" width="28" height="12" rx="2" fill="#ffffff" opacity="0.9"/>
+
+            {/* Bottom Lime Half */}
+            <path d="M72 100 L72 135 C72 160 128 160 128 135 L128 100 Z" fill="url(#svgLimeCap)"/>
+
+            {/* Center Metallic Divider */}
+            <rect x="70" y="97" width="60" height="6" rx="3" fill="url(#silverRing)"/>
+          </g>
+        </svg>
+      </div>
+    );
+  }
 
   return (
     <div

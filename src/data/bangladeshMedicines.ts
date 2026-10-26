@@ -12,7 +12,7 @@ export const INITIAL_USERS: User[] = [
     status: 'ACTIVE',
     createdAt: '2026-01-10T08:00:00Z',
     lastLoginAt: '2026-10-24T22:30:00Z',
-    avatarUrl: '/src/assets/images/superadmin_avatar_1792908539605.jpg'
+    avatarUrl: '/images/superadmin_avatar_1792908539605.jpg'
   },
   {
     id: 'usr_pharmacist',
